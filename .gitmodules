@@ -7,3 +7,6 @@
 [submodule "lib/solarray"]
 	path = lib/solarray
 	url = https://github.com/evmcheb/solarray
+[submodule "lib/forge-gas-metering"]
+	path = lib/forge-gas-metering
+	url = https://github.com/emo-eth/forge-gas-metering
