@@ -19,4 +19,4 @@ An `ERC20Bucket` is an ERC20 token that represents a fraction of an NFT. Only th
 # Caveats
 
 - Nonstandard ERC721 contracts, especially that do not have true immutable ownership or intentionally break composability of the ERC721 standard may be incompatible with `Buckets`.
-- Initially deploying an `ERC20Bucket` contract can be expensive (650k+ gas). `ClonesWithImmutableArgs` can mitigate this at the expense of slight overhead for every call to the token contracts.
+- Initially deploying an `ERC20Bucket` contract can be expensive (650k+ gas). `ClonesWithImmutableArgs` can mitigate this at the expense of increased complexity and slight overhead for every call to the token contracts.
