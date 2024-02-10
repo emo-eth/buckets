@@ -4,7 +4,7 @@
 > 
 > — <cite>Ron Swanson<cite>
 
-`Buckets` is a set of smart contracts for easily and efficiently fractionalizing NFTs into ERC20 tokens. There are no fees, no middlemen, and no trust involved. The contracts are unowned and the code is immutable.
+`Buckets` is a set of smart contracts for easily and efficiently fractionalizing _**any ERC721 NFT**_ into ERC20 tokens. There are no fees, no middlemen, and no trust involved. The contracts are unowned and the code is immutable.
 
 ## BucketFactory
 The `BucketFactory` allows users to deposit ERC721 NFTs and mint corresponding ERC20 tokens. If an ERC20 token does not yet exist for the ERC721 contract, the `BucketFactory` will deploy a new `ERC20Bucket` contract. 
