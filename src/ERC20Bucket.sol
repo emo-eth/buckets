@@ -19,6 +19,8 @@ contract ERC20Bucket is ERC20, Clone {
     ///@notice An error to be used when an account tries to interact with the implementation contract directly.
     error OnlyClones();
 
+    ///@notice modifier to restrict non-static calls to clones to prevent direct
+    ///        state-modifying calls to the implementation contract.
     modifier onlyClones() {
         // since IMPLEMENTATION is immutable, this check restricts calls to
         // DELEGATECALLS; DELEGATECALL'ing clones will have a different address
@@ -33,39 +35,31 @@ contract ERC20Bucket is ERC20, Clone {
     }
 
     constructor() {
+        // store the implementation address in the implementation bytecode
         IMPLEMENTATION = address(this);
-    }
-
-    function MINT_AUTHORITY() external view onlyClones returns (address) {
-        return _MINT_AUTHORITY();
-    }
-
-    function NFT_CONTRACT() external view onlyClones returns (address) {
-        return _NFT_CONTRACT();
-    }
-
-    function _MINT_AUTHORITY() internal pure returns (address) {
-        return _getArgAddress(0);
-    }
-
-    function _NFT_CONTRACT() internal pure returns (address) {
-        return _getArgAddress(0x14);
     }
 
     /**
      * @inheritdoc ERC20
      */
-    function name() public view override onlyClones returns (string memory) {
+    function name() public pure override returns (string memory) {
+        // note that behavior is undefined on the implementation contract
+        // read the length of the name from the extra calldata appended by the clone proxy
         uint256 length = _getArgUint16(0x28);
+        // read the packed bytes of name from the extra calldata appended by the clone proxy
         return string(_getArgBytes(0x2c, length));
     }
 
     /**
      * @inheritdoc ERC20
      */
-    function symbol() public view override onlyClones returns (string memory) {
+    function symbol() public pure override returns (string memory) {
+        // note that behavior is undefined on the implementation contract
+        // read the length of the name to calculate the offset of the symbol
         uint256 nameLength = _getArgUint16(0x28);
+        // read the length of the symbol from the extra calldata appended by the clone proxy
         uint256 length = _getArgUint16(0x2a);
+        // read the packed bytes of symbol from the extra calldata appended by the clone proxy
         return string(_getArgBytes(0x2c + nameLength, length));
     }
 
@@ -91,5 +85,37 @@ contract ERC20Bucket is ERC20, Clone {
             revert NotAuthorized();
         }
         _burn(from, amount);
+    }
+
+    /**
+     * @notice Get the address of the MINT_AUTHORITY for this contract
+     *         Note that behavior is undefined on the implementation contract
+     */
+    function MINT_AUTHORITY() external pure returns (address) {
+        return _MINT_AUTHORITY();
+    }
+
+    /**
+     * @notice Get the address of the backing NFT_CONTRACT for this contract
+     *         Note that behavior is undefined on the implementation contract
+     */
+    function NFT_CONTRACT() external pure returns (address) {
+        return _NFT_CONTRACT();
+    }
+
+    /**
+     * @dev Read the MINT_AUTHORITY address from the extra calldata appended
+     *      by the clone proxy
+     */
+    function _MINT_AUTHORITY() internal pure returns (address) {
+        return _getArgAddress(0);
+    }
+
+    /**
+     * @dev Read the NFT_CONTRACT address from the extra calldata appended
+     *      by the clone proxy
+     */
+    function _NFT_CONTRACT() internal pure returns (address) {
+        return _getArgAddress(0x14);
     }
 }

@@ -78,4 +78,11 @@ contract ERC20BucketTest is Test {
         );
         return ERC20Bucket(clone);
     }
+
+    function testOnlyClones() public {
+        vm.expectRevert(ERC20Bucket.OnlyClones.selector);
+        impl.mint(address(this), 100);
+        vm.expectRevert(ERC20Bucket.OnlyClones.selector);
+        impl.burn(address(this), 100);
+    }
 }
