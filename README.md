@@ -1,66 +1,22 @@
-## Foundry
+# Buckets
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+> "Never half-ass two things. Whole-ass one thing."
+> 
+> — <cite>Ron Swanson<cite>
 
-Foundry consists of:
+`Buckets` is a set of smart contracts for easily and efficiently fractionalizing NFTs into ERC20 tokens. There are no fees, no middlemen, and no trust involved. The contracts are unowned and the code is immutable.
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+## BucketFactory
+The `BucketFactory` allows users to deposit ERC721 NFTs and mint corresponding ERC20 tokens. If an ERC20 token does not yet exist for the ERC721 contract, the `BucketFactory` will deploy a new `ERC20Bucket` contract. 
 
-## Documentation
+Every deposited NFT mints 10,000 of the corresponding `ERC20Bucket` tokens to the minter or specified recipient.
 
-https://book.getfoundry.sh/
+Anyone with a balance greater than 10,000 of an `ERC20Bucket` token call `redeem` to burn their tokens and receive specific ERC721 NFT(s).
 
-## Usage
+## ERC20Bucket
+An `ERC20Bucket` is an ERC20 token that represents a fraction of an NFT. Only the `BucketFactory` can mint new tokens or burn existing tokens.
 
-### Build
+# Caveats
 
-```shell
-$ forge build
-```
-
-### Test
-
-```shell
-$ forge test
-```
-
-### Format
-
-```shell
-$ forge fmt
-```
-
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+- Nonstandard ERC721 contracts, especially that do not have true immutable ownership or intentionally break composability of the ERC721 standard may be incompatible with `Buckets`.
+- Initially deploying an `ERC20Bucket` contract can be expensive (650k+ gas). `ClonesWithImmutableArgs` can mitigate this at the expense of slight overhead for every call to the token contracts.
