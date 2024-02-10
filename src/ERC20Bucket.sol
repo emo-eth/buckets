@@ -2,42 +2,71 @@
 pragma solidity ^0.8.17;
 
 import {ERC20} from "solady/tokens/ERC20.sol";
+import {Clone} from "solady/utils/Clone.sol";
 
 /**
  * @title ERC20Bucket
  * @author emo.eth
  * @notice A fungible ERC20 backed by tokens from a non-fungible ERC721
  */
-contract ERC20Bucket is ERC20 {
-    string _name;
-    string _symbol;
-    ///@notice The address that is authorized to mint and burn tokens
-    address public immutable MINT_AUTHORITY;
-    ///@notice The address of the NFT contract whose tokens back this ERC20
-    address public immutable NFT_CONTRACT;
+contract ERC20Bucket is ERC20, Clone {
+    ///@notice The address of the implementation contract.
+    address public immutable IMPLEMENTATION;
 
     ///@notice An error to be used when the mint or burn are called by an unauthorized address
     error NotAuthorized();
 
-    constructor(string memory name_, string memory symbol_, address nftContract) {
-        _name = name_;
-        _symbol = symbol_;
-        MINT_AUTHORITY = msg.sender;
-        NFT_CONTRACT = nftContract;
+    ///@notice An error to be used when an account tries to interact with the implementation contract directly.
+    error OnlyClones();
+
+    modifier onlyClones() {
+        // since SELF is immutable, this check restricts calls to DELEGATECALLS
+        // DELEGATECALL'ing clones will have a different address than is stored
+        // in the bytecode.
+        // in this case, since there are no native DELEGATECALLs, there's no
+        // actual danger in calling the implementation directly, but
+        // it's best practice to restrict it anyway.
+        if (address(this) == IMPLEMENTATION) {
+            revert OnlyClones();
+        }
+        _;
+    }
+
+    constructor() {
+        IMPLEMENTATION = address(this);
+    }
+
+    function MINT_AUTHORITY() external view onlyClones returns (address) {
+        return _MINT_AUTHORITY();
+    }
+
+    function NFT_CONTRACT() external view onlyClones returns (address) {
+        return _NFT_CONTRACT();
+    }
+
+    function _MINT_AUTHORITY() internal pure returns (address) {
+        return _getArgAddress(0);
+    }
+
+    function _NFT_CONTRACT() internal pure returns (address) {
+        return _getArgAddress(0x14);
     }
 
     /**
      * @inheritdoc ERC20
      */
-    function name() public view override returns (string memory) {
-        return _name;
+    function name() public view override onlyClones returns (string memory) {
+        uint256 length = _getArgUint16(0x28);
+        return string(_getArgBytes(0x2c, length));
     }
 
     /**
      * @inheritdoc ERC20
      */
-    function symbol() public view override returns (string memory) {
-        return _symbol;
+    function symbol() public view override onlyClones returns (string memory) {
+        uint256 nameLength = _getArgUint16(0x28);
+        uint256 length = _getArgUint16(0x2a);
+        return string(_getArgBytes(0x2c + nameLength, length));
     }
 
     /**
@@ -45,8 +74,8 @@ contract ERC20Bucket is ERC20 {
      * @param to The address to mint tokens to
      * @param amount The amount of tokens to mint
      */
-    function mint(address to, uint256 amount) external {
-        if (msg.sender != MINT_AUTHORITY) {
+    function mint(address to, uint256 amount) external onlyClones {
+        if (msg.sender != _MINT_AUTHORITY()) {
             revert NotAuthorized();
         }
         _mint(to, amount);
@@ -57,8 +86,8 @@ contract ERC20Bucket is ERC20 {
      * @param from The address to burn tokens from
      * @param amount The amount of tokens to burn
      */
-    function burn(address from, uint256 amount) external {
-        if (msg.sender != MINT_AUTHORITY) {
+    function burn(address from, uint256 amount) external onlyClones {
+        if (msg.sender != _MINT_AUTHORITY()) {
             revert NotAuthorized();
         }
         _burn(from, amount);

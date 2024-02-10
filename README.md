@@ -7,7 +7,7 @@
 `Buckets` is a set of smart contracts for easily and efficiently fractionalizing _**any ERC721 NFT**_ into ERC20 tokens. There are no fees, no middlemen, and no trust involved. The contracts are unowned and the code is immutable.
 
 ## BucketFactory
-The `BucketFactory` allows users to deposit ERC721 NFTs and mint corresponding ERC20 tokens. If an ERC20 token does not yet exist for the ERC721 contract, the `BucketFactory` will deploy a new `ERC20Bucket` contract. 
+The `BucketFactory` allows users to deposit ERC721 NFTs and mint corresponding ERC20 tokens. If an ERC20 token does not yet exist for the ERC721 contract, the `BucketFactory` will deploy a new lightweight clone `ERC20Bucket` contract. 
 
 Every deposited NFT mints 10,000 of the corresponding `ERC20Bucket` tokens to the minter or specified recipient.
 
@@ -19,4 +19,4 @@ An `ERC20Bucket` is an ERC20 token that represents a fraction of an NFT. Only th
 # Caveats
 
 - Nonstandard ERC721 contracts, especially that do not have true immutable ownership or intentionally break composability of the ERC721 standard may be incompatible with `Buckets`.
-- Initially deploying an `ERC20Bucket` contract can be expensive (650k+ gas). `ClonesWithImmutableArgs` can mitigate this at the expense of increased complexity and slight overhead for every call to the token contracts.
+- `ERC20Bucket` `name`s and `symbol`s will break if someone tries to get cheeky and deploy a contract with a name or symbol longer than ~65,500 bytes. Consider it a feature, not a bug.

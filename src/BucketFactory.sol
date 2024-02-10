@@ -3,6 +3,7 @@ pragma solidity ^0.8.17;
 
 import {ERC721} from "solady/tokens/ERC721.sol";
 import {ERC20Bucket} from "./ERC20Bucket.sol";
+import {LibClone} from "solady/utils/LibClone.sol";
 
 /**
  * @title BucketFactory
@@ -18,12 +19,17 @@ import {ERC20Bucket} from "./ERC20Bucket.sol";
 contract BucketFactory {
     ///@notice The number of fungible tokens minted per NFT (18 decimal places)
     uint256 public constant FUNGIBLE_TOKENS_PER_NFT = 10_000 ether;
+    address public immutable ERC20_BUCKET_IMPLEMENTATION;
 
     ///@notice A mapping from NFT contract addresses to its corresponding ERC20 bucket contract addresses
     mapping(address nftContract => address erc20BucketContract) public nftToErc20Bucket;
 
     ///@notice An error to be used when a bucket does not exist
     error BucketDoesNotExist();
+
+    constructor() {
+        ERC20_BUCKET_IMPLEMENTATION = address(new ERC20Bucket());
+    }
 
     /**
      * @notice Deposit an NFT into the contract from the sender and mint the corresponding fungible tokens to the sender
@@ -169,11 +175,19 @@ contract BucketFactory {
         ERC20Bucket erc20Bucket = ERC20Bucket(nftToErc20Bucket[nftContract]);
         // create a new bucket if one doesn't exist
         if (address(erc20Bucket) == address(0)) {
-            erc20Bucket = new ERC20Bucket{salt: bytes32(bytes20(nftContract))}(
-                string.concat(ERC721(nftContract).name(), " (Bucket)"),
-                string.concat(ERC721(nftContract).symbol(), "(B)"),
-                nftContract
+            string memory name = string.concat(ERC721(nftContract).name(), " (Bucket)");
+            string memory symbol = string.concat(ERC721(nftContract).symbol(), "(B)");
+            bytes memory immutableArgs = abi.encodePacked(
+                address(this),
+                address(nftContract),
+                uint16(bytes(name).length),
+                uint16(bytes(symbol).length),
+                name,
+                symbol
             );
+            address clone =
+                LibClone.cloneDeterministic(ERC20_BUCKET_IMPLEMENTATION, immutableArgs, bytes32(bytes20(nftContract)));
+            erc20Bucket = ERC20Bucket(clone);
             // store the address of the new bucket
             nftToErc20Bucket[nftContract] = address(erc20Bucket);
         }

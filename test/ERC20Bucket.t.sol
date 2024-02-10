@@ -3,12 +3,15 @@ pragma solidity ^0.8.17;
 
 import {Test} from "forge-std/Test.sol";
 import {ERC20Bucket} from "src/./ERC20Bucket.sol";
+import {LibClone} from "solady/utils/LibClone.sol";
 
 contract ERC20BucketTest is Test {
+    ERC20Bucket impl;
     ERC20Bucket bucket;
 
     function setUp() public {
-        bucket = new ERC20Bucket("Test", "TST", address(1234));
+        impl = new ERC20Bucket();
+        bucket = newERC20Bucket("Test", "TST", address(1234), address(this));
     }
 
     function test_constructor() public {
@@ -21,13 +24,13 @@ contract ERC20BucketTest is Test {
 
     function test_msgSender_mintAuthority(address sender) public {
         vm.prank(sender);
-        ERC20Bucket _bucket = new ERC20Bucket("Test", "TST", address(1234));
+        ERC20Bucket _bucket = newERC20Bucket("Test", "TST", address(1234), sender);
         assertEq(_bucket.MINT_AUTHORITY(), sender);
     }
 
     function test_mint_mintAuthority(address sender, address recipient) public {
         vm.startPrank(sender);
-        ERC20Bucket _bucket = new ERC20Bucket("Test", "TST", address(1234));
+        ERC20Bucket _bucket = newERC20Bucket("Test", "TST", address(1234), sender);
         _bucket.mint(recipient, 100);
         vm.stopPrank();
         assertEq(_bucket.balanceOf(recipient), 100);
@@ -40,7 +43,7 @@ contract ERC20BucketTest is Test {
 
     function test_burn_mintAuthority(address sender, address recipient) public {
         vm.startPrank(sender);
-        ERC20Bucket _bucket = new ERC20Bucket("Test", "TST", address(1234));
+        ERC20Bucket _bucket = newERC20Bucket("Test", "TST", address(1234), sender);
         _bucket.mint(recipient, 100);
         _bucket.burn(recipient, 100);
         assertEq(_bucket.balanceOf(recipient), 0);
@@ -50,5 +53,29 @@ contract ERC20BucketTest is Test {
         }
         vm.expectRevert(ERC20Bucket.NotAuthorized.selector);
         _bucket.burn(recipient, 100);
+    }
+
+    function testEmptyNameSymbol() public {
+        ERC20Bucket _bucket = newERC20Bucket("", "", address(1234), address(this));
+        assertEq(_bucket.name(), "");
+        assertEq(_bucket.symbol(), "");
+    }
+
+    function newERC20Bucket(string memory name, string memory symbol, address nftContract, address authority)
+        public
+        returns (ERC20Bucket)
+    {
+        address clone = LibClone.clone(
+            address(impl),
+            abi.encodePacked(
+                authority,
+                nftContract,
+                uint16(bytes(name).length),
+                uint16(bytes(symbol).length),
+                bytes(name),
+                bytes(symbol)
+            )
+        );
+        return ERC20Bucket(clone);
     }
 }
