@@ -20,9 +20,9 @@ contract ERC20Bucket is ERC20, Clone {
     error OnlyClones();
 
     modifier onlyClones() {
-        // since SELF is immutable, this check restricts calls to DELEGATECALLS
-        // DELEGATECALL'ing clones will have a different address than is stored
-        // in the bytecode.
+        // since IMPLEMENTATION is immutable, this check restricts calls to
+        // DELEGATECALLS; DELEGATECALL'ing clones will have a different address
+        // than is stored in the bytecode.
         // in this case, since there are no native DELEGATECALLs, there's no
         // actual danger in calling the implementation directly, but
         // it's best practice to restrict it anyway.

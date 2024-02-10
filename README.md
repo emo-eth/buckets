@@ -11,7 +11,7 @@ The `BucketFactory` allows users to deposit ERC721 NFTs and mint corresponding E
 
 Every deposited NFT mints 10,000 of the corresponding `ERC20Bucket` tokens to the minter or specified recipient.
 
-Anyone with a balance greater than 10,000 of an `ERC20Bucket` token call `redeem` to burn their tokens and receive specific ERC721 NFT(s).
+Anyone with a balance greater than 10,000 of an `ERC20Bucket` token can call `redeem` to burn their tokens and receive specific ERC721 NFT(s).
 
 ## ERC20Bucket
 An `ERC20Bucket` is an ERC20 token that represents a fraction of an NFT. Only the `BucketFactory` can mint new tokens or burn existing tokens.
