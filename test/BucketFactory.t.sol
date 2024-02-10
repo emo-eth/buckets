@@ -215,4 +215,13 @@ contract BucketsTest is Test {
         assertNotEq(address(bucket), address(0));
         assertEq(bucket.balanceOf(address(alice)), 10_000 ether);
     }
+
+    function testBucketConfiguration() public {
+        factory.deposit(address(token1), 1);
+        ERC20Bucket bucket = ERC20Bucket(factory.nftToErc20Bucket(address(token1)));
+        assertEq(bucket.name(), "TestERC721 (Bucket)");
+        assertEq(bucket.symbol(), "TST(B)");
+        assertEq(bucket.MINT_AUTHORITY(), address(factory));
+        assertEq(bucket.NFT_CONTRACT(), address(token1));
+    }
 }
